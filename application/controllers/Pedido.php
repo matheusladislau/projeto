@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Pedido extends PR_Controller
+class Pedido extends CI_Controller
 {
 	/**
 	* @author: Tiago Villalobos
@@ -20,24 +20,26 @@ class Pedido extends PR_Controller
 	*/
 	public function index()
 	{
-		$this->setTitle('Pedidos');
+		$dados['title'] = 'Pedido';
+		$dados['pedidos'] = $this->pedido->getFromClients();
+		$dados['compras'] = $this->pedido->getFromProviders();
+		$dados['assets'] = array(
+			'js' => array(
+				'confirm.modal.js'
+			)
+		);
 
-		$this->addData('pedidos', $this->pedido->getFromClients());
-		$this->addData('compras', $this->pedido->getFromProviders());
-
-		foreach($this->data['pedidos'] as $pedido)
+		foreach($dados['pedidos'] as $pedido)
 		{
 			$pedido->produtos = $this->produto->getByOrder($pedido->id);
 		}
-
-		foreach($this->data['compras'] as $compra)
+		foreach($dados['compras'] as $compra)
 		{
 			$compra->produtos = $this->produto->getByOrder($compra->id);
 		}
 
-       	$this->loadIndexDefaultScripts();
+		loadTemplate('includes/header', 'pedido/index', 'includes/footer', $dados);
 
-		$this->loadView('index');
 	}
 
 	/**
@@ -80,26 +82,21 @@ class Pedido extends PR_Controller
   				$this->insertOrderProducts($id_pedido);
 
   				$this->redirectSuccess('Pedido cadastrado com sucesso');
-
   			}
   			else
   			{
   				$this->redirectError('cadastrar');
+					redirect('vaga/cadastrar');
   			}
   		}
   		else
   		{
-
-  			$this->setTitle('Cadastrar Pedido');
-	  		$this->addData('produtos',  $this->produto->get());
-	  		$this->addData('clientes',  $this->cliente->get());
-	  		$this->addData('fornecedores', $this->fornecedor->get());
-	  		$this->addData('situacoes', $this->andamento->getSituations());
-
-  			$this->addScripts(array('pedido/main.js'));
-  			$this->loadFormDefaultScripts();
-
-  			$this->loadView('cadastrar');
+				$dados['title'] = 'Cadastrar Pedido';
+				$dados['produtos'] = $this->produto->get();
+				$dados['clientes'] = $this->cliente->get();
+				$dados['fornecedores'] = $this->fornecedor->get();
+				$dados['situacoes'] = $this->andamento->getSituations();
+				loadTemplate('includes/header', 'pedido/cadastrar', 'includes/footer', $dados);
 
   		}
 
@@ -132,19 +129,18 @@ class Pedido extends PR_Controller
 		}
 		else
 		{
-			$this->setTitle('Edição de Pedido');
 
-			$this->addScripts(array('pedido/main.js'));
-  			$this->loadFormDefaultScripts();
+			$dados['title'] = 'Edição de Pedido';
 
-			$this->addData('pedido', $this->pedido->getById($id_pedido));
+			$dados['pedido'] = $this->pedido->getById($id_pedido);
 
-			$this->filterDataByTransaction();
+$dados['label'] = 'Cliente';
+$dados['clientes'] = $this->cliente->get();
+$dados['produtos'] = $this->produto->get();
+				$dados['situacoes'] = $this->andamento->getSituations();
+				$dados['pedido_produtos'] = $this->produto->getByOrder($id_pedido);
 
-	  		$this->addData('situacoes',       $this->andamento->getSituations());
-	  		$this->addData('pedido_produtos', $this->produto->getByOrder($id_pedido));
-
-			$this->loadView('editar');
+			loadTemplate('includes/header', 'pedido/editar', 'includes/footer', $dados);
 		}
 	}
 
@@ -175,15 +171,13 @@ class Pedido extends PR_Controller
 		}
 		else
 		{
-			$this->setTitle('Edição de Pedido');
+			$dados['title'] = 'Edição de Pedido';
 
-			$this->loadFormDefaultScripts();
+	  		$dados['situacoes'] = $this->andamento->getSituations();
+	  		$dados['pedido'] = $this->pedido->getById($id_pedido);
+	  		$dados['pedido_produtos'] = $this->produto->getByOrder($id_pedido);
 
-	  		$this->addData('situacoes',       $this->andamento->getSituations());
-	  		$this->addData('pedido',          $this->pedido->getById($id_pedido));
-	  		$this->addData('pedido_produtos', $this->produto->getByOrder($id_pedido));
-
-	  		$this->loadView('editar_fornecedor');
+				loadTemplate('includes/header', 'pedido/editar_fornecedor', 'includes/footer', $dados);
 
 		}
 	}
@@ -200,7 +194,7 @@ class Pedido extends PR_Controller
 		$this->pedido->removeProducts($id_pedido);
 		$this->pedido->remove($id_pedido);
 
-		$this->redirectSuccess('Pedido removido com sucesso!');
+		$this->redirectSuccess('Pedido excluido com sucesso', 'pedido');
 	}
 
 	/**
@@ -210,16 +204,16 @@ class Pedido extends PR_Controller
 	private function filterDataByTransaction()
 	{
 
-  		if($this->data['pedido']->transacao == 'V')
+  		if($this->$dados['pedido']->transacao == 'V')
   		{
-  			$this->addData('label',    'Cliente');
-  			$this->addData('clientes', $this->cliente->get());
-	  		$this->addData('produtos', $this->produto->get());
+  			$dados['label'] = 'Cliente';
+  			$dados['clientes'] = $this->cliente->get();
+	  		$dados['produtos'] = $this->produto->get();
   		}
   		else
   		{
-  			$this->addData('label',    'Fornecedor');
-  			$this->addData('clientes', $this->fornecedor->get());
+  			$dados['label'] = 'Fornecedor';
+  			$dados['clientes'] = $this->fornecedor->get();
 
   			$id_provider;
   			foreach($this->data['clientes'] as $cliente)
@@ -230,8 +224,9 @@ class Pedido extends PR_Controller
   				}
   			}
 
-  			$this->addData('produtos', $this->produto->getByProvider($id_provider));
+  			$dados['produtos'] = $this->produto->getByProvider($id_provider);
   		}
+			return $dados;
 	}
 
 	/**
@@ -420,6 +415,16 @@ class Pedido extends PR_Controller
 		$mpdf->writeHTML($html);
 
 		$mpdf->Output('pedido-'.$id_pedido.'.pdf', 'I');
+	}
+
+
+	protected function redirectSuccess($message, $subView = null)
+	{
+		$this->session->set_flashdata('success', $message);
+
+		$path = is_null($subView) ? $this->viewDirectory : $this->viewDirectory.'/'.$subView;
+
+		redirect($path);
 	}
 
 }
