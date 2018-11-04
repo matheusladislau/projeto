@@ -81,12 +81,14 @@ class Pedido extends CI_Controller
 
   				$this->insertOrderProducts($id_pedido);
 
-  				$this->redirectSuccess('Pedido cadastrado com sucesso');
+					$this->session->set_flashdata('success','Pedido cadastrado com sucesso!');
+					redirect('pedido');
   			}
   			else
   			{
-  				$this->redirectError('cadastrar');
-					redirect('vaga/cadastrar');
+					$this->session->set_flashdata('errors', $this->form_validation->error_array());
+					$this->session->set_flashdata('old_data', $this->input->post());
+					redirect('pedido/cadastrar');
   			}
   		}
   		else
@@ -120,7 +122,8 @@ class Pedido extends CI_Controller
 
   				$this->pedido->removeProducts($id_pedido);
   				$this->insertOrderProducts($id_pedido);
-  				$this->redirectSuccess('Pedido atualizado com sucesso!');
+					$this->session->set_flashdata('success','Pedido atualizado com sucesso!');
+					redirect('pedido');
 			}
 			else
 			{
@@ -134,9 +137,9 @@ class Pedido extends CI_Controller
 
 			$dados['pedido'] = $this->pedido->getById($id_pedido);
 
-$dados['label'] = 'Cliente';
-$dados['clientes'] = $this->cliente->get();
-$dados['produtos'] = $this->produto->get();
+				$dados['label'] = 'Cliente';
+				$dados['clientes'] = $this->cliente->get();
+				$dados['produtos'] = $this->produto->get();
 				$dados['situacoes'] = $this->andamento->getSituations();
 				$dados['pedido_produtos'] = $this->produto->getByOrder($id_pedido);
 
