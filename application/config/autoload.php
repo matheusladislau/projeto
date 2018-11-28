@@ -101,7 +101,8 @@ $autoload['helper'] = array(
     'loadTemplate',
     'switchDate',
     'dataprep_fornecedor',
-    'translate'
+    'translate',
+    'generateImageName',
 );
 
 /*
@@ -180,4 +181,9 @@ $autoload['model'] = array(
                     'Almoxarifado_model'         => 'almoxarifado',
                     'UnidadeMedida_model'        => 'unidadeMedida',
                     'Config_model'               => 'configuration'
+                    'CargoFuncionario_model'     => 'cargo_funcionario',
+                    'Habilidade_model'           => 'habilidade',
+                    'CargoFuncionario_model'     => 'cargo_funcionario',
+                    'PedidoAlmoxarifado_model'   => 'pedido_almoxarifado',
+                    'CargoFuncionario_model'     => 'cargo_funcionario',
 );
